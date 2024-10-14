@@ -9,7 +9,7 @@ def send_audio_file(api_gateway_url, file_path):
         
         # Convert audio to base64
         audio_base64 = base64.b64encode(audio_binary).decode('utf-8')
-        
+        print(audio_base64)
         # Prepare the payload
         payload = {
             "audioData": audio_base64
@@ -19,7 +19,7 @@ def send_audio_file(api_gateway_url, file_path):
         headers = {
             "Content-Type": "application/json"
         }
-        response = requests.put(api_gateway_url, json=payload, headers=headers)
+        response = requests.post(api_gateway_url, json=payload, headers=headers)
         
         # Check the response
         if response.status_code == 200:
@@ -32,6 +32,7 @@ def send_audio_file(api_gateway_url, file_path):
         print(f"An error occurred: {e}")
 
 # Example usage
-api_gateway_url = "https://dbf3jvpmx7.execute-api.eu-north-1.amazonaws.com/dev1/put"
+api_gateway_url = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/dev/upload"
+#api_gateway_url = 'https://2t5njgv827.execute-api.eu-north-1.amazonaws.com/devTest/upload'
 file_path = "request_recording.wav"
 send_audio_file(api_gateway_url, file_path)

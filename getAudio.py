@@ -29,6 +29,6 @@ def get_audio_file(api_gateway_url, filename):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-api_gateway_url = "https://dbf3jvpmx7.execute-api.eu-north-1.amazonaws.com/dev1/"
-filename = "response.mp3"
+api_gateway_url = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/dev"
+filename = "testFile.mp3"
 get_audio_file(api_gateway_url, filename)
