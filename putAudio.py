@@ -1,27 +1,29 @@
 import requests
 import base64
 
+thread_id = "thread_ekuTmn2RgHR0WKGaDF3EL92Z"
+assistant_id = "asst_1PoJ2H6emUlIq0zgzp9OFaid"
+
 def send_audio_file(api_gateway_url, file_path):
     try:
-        # Read the audio file in binary mode
+
         with open(file_path, "rb") as audio_file:
             audio_binary = audio_file.read()
         
-        # Convert audio to base64
         audio_base64 = base64.b64encode(audio_binary).decode('utf-8')
-        print(audio_base64)
-        # Prepare the payload
+        #print(audio_base64)
+
         payload = {
-            "audioData": audio_base64
+            "audioData": audio_base64,
+            "thread_id": thread_id,
+            "assistant_id": assistant_id
         }
         
-        # Send the PUT request
         headers = {
             "Content-Type": "application/json"
         }
         response = requests.post(api_gateway_url, json=payload, headers=headers)
         
-        # Check the response
         if response.status_code == 200:
             print("Audio file uploaded successfully.")
         else:
@@ -34,5 +36,5 @@ def send_audio_file(api_gateway_url, file_path):
 # Example usage
 api_gateway_url = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/dev/upload"
 #api_gateway_url = 'https://2t5njgv827.execute-api.eu-north-1.amazonaws.com/devTest/upload'
-file_path = "request_recording.wav"
+file_path = "testFile.mp3"
 send_audio_file(api_gateway_url, file_path)
