@@ -10,7 +10,6 @@ def get_audio_file(api_gateway_url, filename):
         
         if response.status_code == 200:
             data = response.json()
-            #print(data)
             
             audio_base64 = data.get("audio_data")
             if audio_base64:
