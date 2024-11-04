@@ -29,5 +29,5 @@ def get_audio_file(api_gateway_url, filename):
         print(f"An error occurred: {e}")
 
 api_gateway_url = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/dev"
-filename = "testFile.mp3"
+filename = "1730761121.mp3"
 get_audio_file(api_gateway_url, filename)
