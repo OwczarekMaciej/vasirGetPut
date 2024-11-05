@@ -1,37 +1,38 @@
 import requests
 import base64
+import json
 
 thread_id = "thread_ekuTmn2RgHR0WKGaDF3EL92Z"
 assistant_id = "asst_1PoJ2H6emUlIq0zgzp9OFaid"
 
-def send_audio_file(api_gateway_url, file_path):
+def upload_audio_file(api_url, file_path):
     try:
-
-        with open(file_path, "rb") as audio_file:
-            audio_binary = audio_file.read()
-        
-        audio_base64 = base64.b64encode(audio_binary).decode('utf-8')
+        with open(file_path, 'rb') as audio_file:
+            encoded_audio = base64.b64encode(audio_file.read()).decode('utf-8')
 
         payload = {
-            "audioData": audio_base64,
+            "audioData": encoded_audio,
             "thread_id": thread_id,
             "assistant_id": assistant_id
         }
-        
+
         headers = {
-            "Content-Type": "application/json"
+            'Content-Type': 'application/json'
         }
-        response = requests.post(api_gateway_url, json=payload, headers=headers)
-        
+
+        response = requests.post(api_url, json=payload, headers=headers)
+
         if response.status_code == 200:
-            print("Audio file uploaded successfully.")
+            response_data = response.json()
+            filename = response_data.get('body')
+            print(f"File uploaded successfully. Response: {filename}")
+            return filename  # Ensure the filename is returned on success
         else:
-            print(f"Failed to upload audio file. Status code: {response.status_code}")
+            print(f"Failed to upload file. Status code: {response.status_code}")
             print(f"Error message: {response.text}")
-    
+            return None
+
     except Exception as e:
         print(f"An error occurred: {e}")
+        return None
 
-api_gateway_url = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/dev/upload"
-file_path = "testFile.mp3"
-send_audio_file(api_gateway_url, file_path)

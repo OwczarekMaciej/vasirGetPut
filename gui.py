@@ -1,94 +1,163 @@
 import tkinter as tk
-from tkinter import ttk
 import threading
+import itertools
+import recordAudio
+import putAudio
+import getAudio
 import time
+import os
 
-class AudioApp:
+class AudioRecorderApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Audio Recording App")
+        self.setup_window()
+        self.initialize_variables()
+
+        # Frame for content alignment
+        frame = tk.Frame(root, bg=self.bg_color)
+        frame.pack(expand=True)
+
+        # Setup UI elements
+        self.setup_toggle_button(frame)
+        self.setup_labels(frame)
+
+    def setup_window(self):
+        """Configure the main window settings."""
+        self.root.title("VASIR")
+        self.root.geometry("600x400")
+        self.bg_color = "#2E2E2E"
+        self.root.config(bg=self.bg_color)
+    
+    def initialize_variables(self):
+        """Initialize the application variables."""
+        self.stop_event = threading.Event()
+        self.recording_thread = None
+        self.loading_thread = None
         self.is_recording = False
-        self.is_waiting = False
-        
-        # Label to show the status
-        self.status_label = tk.Label(root, text="Ready to record", font=("Arial", 14))
-        self.status_label.pack(pady=20)
+        self.filename = "output.wav"
+        self.api_url_upload = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/dev/upload"
+        self.api_url_download = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/dev"
 
-        # Start Recording Button
-        self.start_button = ttk.Button(root, text="Start Recording", command=self.start_recording)
-        self.start_button.pack(pady=10)
+    def setup_toggle_button(self, frame):
+        """Create and configure the toggle button."""
+        self.toggle_button = tk.Button(frame, text="Start Recording", command=self.toggle_recording,
+                                       font=("Helvetica", 16, "bold"), bg="#4CAF50", fg="black",
+                                       width=20, height=2, relief="solid", bd=1)
+        self.configure_button(self.toggle_button, highlight_color="#4CAF50")
+        self.toggle_button.grid(row=0, column=0, pady=(50, 10), padx=10)
 
-        # Stop Recording Button (initially disabled)
-        self.stop_button = ttk.Button(root, text="Stop Recording", command=self.stop_recording, state="disabled")
-        self.stop_button.pack(pady=10)
+    def configure_button(self, button, highlight_color):
+        """Apply common configurations to a button."""
+        button.config(highlightbackground=highlight_color, highlightcolor=highlight_color, borderwidth=2)
+        button.bind("<Enter>", lambda event: button.config(highlightbackground="#FF5722"))
+        button.bind("<Leave>", lambda event: button.config(highlightbackground=highlight_color))
 
-        # Visual effect (color change)
-        self.visual_label = tk.Label(root, text="", width=30, height=2, bg="lightgray")
-        self.visual_label.pack(pady=20)
+    def setup_labels(self, frame):
+        """Create and configure the status and loading labels."""
+        self.status_label = tk.Label(frame, text="Press 'Start Recording' to begin", 
+                                     font=("Helvetica", 14), bg=self.bg_color, fg="white")
+        self.status_label.grid(row=1, column=0, pady=10)
+
+        self.loading_label = tk.Label(frame, text="", font=("Helvetica", 12), 
+                                      bg=self.bg_color, fg="white")
+        self.loading_label.grid(row=2, column=0, pady=10)
+
+    def toggle_recording(self):
+        """Handle the toggle button click to start/stop recording."""
+        if not self.is_recording:
+            self.start_recording()
+        else:
+            self.stop_recording()
 
     def start_recording(self):
-        # Update status and button states
+        """Begin recording audio."""
+        self.stop_event.clear()
         self.is_recording = True
-        self.status_label.config(text="Recording...")
-        self.start_button.config(state="disabled")
-        self.stop_button.config(state="normal")
+        self.update_ui_start_recording()
 
-        # Start the visual effect
-        self.start_visual_effect()
-
-        # Start the recording in a separate thread to avoid blocking the GUI
-        threading.Thread(target=self.record_audio).start()
+        self.recording_thread = threading.Thread(target=self.record_audio)
+        self.recording_thread.start()
 
     def stop_recording(self):
-        # Update recording status
+        """Stop recording audio."""
+        self.stop_event.set()
+        self.recording_thread.join()
+
         self.is_recording = False
-        self.status_label.config(text="Sending audio...")
-        self.stop_visual_effect()
+        self.status_label.config(text="Uploading audio...", fg="white")
+        self.toggle_button.config(text="Start Recording", bg="#4CAF50")
 
-        # Change button states
-        self.stop_button.config(state="disabled")
+        threading.Thread(target=self.upload_and_get_response).start()
 
-        # Send and wait for response in a separate thread
-        threading.Thread(target=self.send_and_receive_audio).start()
+    def update_ui_start_recording(self):
+        """Update UI components to reflect recording status."""
+        self.toggle_button.config(text="Stop Recording", bg="#FF5722")
+        self.status_label.config(text="Recording...", fg="white")
 
     def record_audio(self):
-        # Integrate your audio recording code here
-        time.sleep(5)  # Simulate a recording delay for demo purposes
+        """Handle the audio recording."""
+        recordAudio.record_audio(self.stop_event)
 
-    def send_and_receive_audio(self):
-        # Integrate your code to send and receive audio here
+    def upload_and_get_response(self):
+        """Upload the recorded audio and wait for a response."""
+        try:
+            response_filename = putAudio.upload_audio_file(self.api_url_upload, self.filename)
+            if response_filename:
+                self.status_label.config(text="Uploaded. Waiting for response...", fg="white")
+                self.start_loading_animation()
+                self.poll_for_response_audio(response_filename)
+            else:
+                self.status_label.config(text="Failed to upload audio.", fg="red")
+        except Exception as e:
+            self.status_label.config(text=f"Error: {e}", fg="red")
 
-        # Simulate waiting for a response
-        self.is_waiting = True
-        self.start_waiting_effect()
-        time.sleep(3)  # Simulate server response time
-        self.is_waiting = False
-        self.stop_waiting_effect()
+    def poll_for_response_audio(self, response_filename):
+        """Poll the server for a response audio file."""
+        while True:
+            try:
+                audio_data = getAudio.get_audio_file(self.api_url_download, response_filename)
+                if audio_data:
+                    with open("response_audio.mp3", "wb") as f:
+                        f.write(audio_data)
 
-        # Update status and reset button states
-        self.status_label.config(text="Ready to record")
-        self.start_button.config(state="normal")
+                    self.status_label.config(text="Response received. Playing audio...", fg="white")
+                    self.stop_loading_animation()
+                    self.play_audio(response_filename)
+                    break
+                else:
+                    self.status_label.config(text="Waiting for response...", fg="white")
+            except Exception as e:
+                self.status_label.config(text=f"Error during retrieval: {e}", fg="red")
 
-    def start_visual_effect(self):
-        def animate():
-            colors = ["red", "orange", "yellow"]
-            i = 0
-            while self.is_recording:
-                self.visual_label.config(bg=colors[i % len(colors)])
-                i += 1
-                time.sleep(0.3)
-        threading.Thread(target=animate).start()
+            time.sleep(1)
 
-    def stop_visual_effect(self):
-        self.visual_label.config(bg="lightgray")
+    def play_audio(self, filename):
+        """Play the received audio file."""
+        os.system(f"afplay {filename}")
+        self.status_label.config(text="Playback complete", fg="white")
 
-    def start_waiting_effect(self):
-        self.status_label.config(text="Waiting for response...", fg="blue")
+    def start_loading_animation(self):
+        """Start an animation to indicate loading status."""
+        self.loading_label.config(text="Waiting...")
+        self.loading_animation_active = True
+        self.loading_thread = threading.Thread(target=self.animate_loading)
+        self.loading_thread.start()
 
-    def stop_waiting_effect(self):
-        self.status_label.config(fg="black")
+    def stop_loading_animation(self):
+        """Stop the loading animation."""
+        self.loading_animation_active = False
+        self.loading_thread.join()
+        self.loading_label.config(text="")
 
-# Run the application
+    def animate_loading(self):
+        """Animate the loading label with rotating symbols."""
+        loading_symbols = itertools.cycle(['|', '/', '-', '\\'])
+        while self.loading_animation_active:
+            symbol = next(loading_symbols)
+            self.loading_label.config(text=f"Waiting {symbol}")
+            time.sleep(0.2)
+
+# Create the main application window
 root = tk.Tk()
-app = AudioApp(root)
+app = AudioRecorderApp(root)
 root.mainloop()
