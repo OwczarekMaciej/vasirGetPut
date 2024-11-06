@@ -7,7 +7,7 @@ import getAudio
 import time
 import os
 
-class AudioRecorderApp:
+class VasirApp:
     def __init__(self, root):
         self.root = root
         self.setup_window()
@@ -159,5 +159,5 @@ class AudioRecorderApp:
 
 # Create the main application window
 root = tk.Tk()
-app = AudioRecorderApp(root)
+app = VasirApp(root)
 root.mainloop()
