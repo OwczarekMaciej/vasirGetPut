@@ -122,7 +122,7 @@ class VasirApp:
 
                     self.status_label.config(text="Response received. Playing audio...", fg="white")
                     self.stop_loading_animation()
-                    self.play_audio(response_filename)
+                    self.play_audio("response_audio.mp3")
                     break
                 else:
                     self.status_label.config(text="Waiting for response...", fg="white")

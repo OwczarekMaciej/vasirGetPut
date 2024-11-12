@@ -3,3 +3,5 @@ myenv/
 venv
 myenv
 .DS_Store
+__pycache__
+icon.icns
