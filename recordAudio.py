@@ -1,4 +1,3 @@
-# recordAudio.py
 import pyaudio
 import wave
 import threading
@@ -25,12 +24,10 @@ def record_audio(stop_event):
         data = stream.read(chunk)
         frames.append(data)
 
-    # Stop and close the stream
     stream.stop_stream()
     stream.close()
     p.terminate()
 
-    # Save the recorded audio to a file
     wf = wave.open(filename, 'wb')
     wf.setnchannels(channels)
     wf.setsampwidth(p.get_sample_size(sample_format))

@@ -5,3 +5,6 @@ myenv
 .DS_Store
 __pycache__
 icon.icns
+putEvent.py
+output.wav
+__pycache__

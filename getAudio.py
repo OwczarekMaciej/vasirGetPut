@@ -11,7 +11,7 @@ def get_audio_file(api_gateway_url, filename):
             data = response.json()
             audio_base64 = data.get("audio_data")
             if audio_base64:
-                return base64.b64decode(audio_base64)  # Return binary data for saving
+                return base64.b64decode(audio_base64)
             else:
                 print("No audio data found in the response.")
                 return None
