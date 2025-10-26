@@ -31,8 +31,8 @@ class VasirApp:
         self.loading_thread = None
         self.is_recording = False
         self.filename = "output.wav"
-        self.api_url_upload = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/dev/upload"
-        self.api_url_download = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/dev"
+        self.api_url_upload = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/test/upload"
+        self.api_url_download = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/test/"
 
     def setup_toggle_button(self, frame):
         self.toggle_button = tk.Button(frame, text="Start Recording", command=self.toggle_recording,

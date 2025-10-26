@@ -3,8 +3,8 @@ import base64
 import json
 from datetime import datetime
 
-thread_id = "thread_ekuTmn2RgHR0WKGaDF3EL92Z"
-assistant_id = "asst_1PoJ2H6emUlIq0zgzp9OFaid"
+# thread_id = "thread_ekuTmn2RgHR0WKGaDF3EL92Z"
+# assistant_id = "asst_8KgflVesqua8aN7u5VFZ5u5P"
 
 def upload_audio_file(api_url, file_path):
     try:
@@ -13,10 +13,10 @@ def upload_audio_file(api_url, file_path):
         now = datetime.now()
 
         payload = {
-            "audioData": encoded_audio,
-            "thread_id": thread_id,
-            "assistant_id": assistant_id,
-            "time":  now.strftime("%d/%m/%Y %H:%M:%S")
+            "audioData": encoded_audio
+            # "thread_id": thread_id,
+            # "assistant_id": assistant_id,
+            #"time":  now.strftime("%d/%m/%Y %H:%M:%S")
         }
 
         headers = {
@@ -39,5 +39,5 @@ def upload_audio_file(api_url, file_path):
         print(f"An error occurred: {e}")
         return None
     
-#upload_audio_file("https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/dev/upload", "output.wav")
+upload_audio_file("https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/test/upload", "output.wav")
 
