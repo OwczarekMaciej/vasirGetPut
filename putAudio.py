@@ -1,33 +1,32 @@
 import requests
 import base64
 import json
+import os
 from datetime import datetime
 
-# thread_id = "thread_ekuTmn2RgHR0WKGaDF3EL92Z"
-# assistant_id = "asst_8KgflVesqua8aN7u5VFZ5u5P"
+API_GATEWAY_URL = 'https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/test/upload'
+FILE_PATH = 'output.wav' 
 
 def upload_audio_file(api_url, file_path):
     try:
         with open(file_path, 'rb') as audio_file:
             encoded_audio = base64.b64encode(audio_file.read()).decode('utf-8')
+            
         now = datetime.now()
+        time_str = now.strftime("%d/%m/%Y %H:%M:%S")
 
         payload = {
-            "audioData": encoded_audio
-            # "thread_id": thread_id,
-            # "assistant_id": assistant_id,
-            #"time":  now.strftime("%d/%m/%Y %H:%M:%S")
+            "audio_data": encoded_audio, 
+            "time": time_str,
+            "assistant_id": 'asst_uQS0R5jCbmw9ib7mel2FPdGt',
         }
 
-        headers = {
-            'Content-Type': 'application/json'
-        }
-
-        response = requests.post(api_url, json=payload, headers=headers)
+        print(f"Wysyłanie pliku {os.path.basename(file_path)} do {api_url}...")
+        response = requests.post(api_url, json=payload)
 
         if response.status_code == 200:
             response_data = response.json()
-            filename = response_data.get('body')
+            filename = response_data.get('filename')
             print(f"File uploaded successfully. Response: {filename}")
             return filename
         else:
@@ -39,5 +38,5 @@ def upload_audio_file(api_url, file_path):
         print(f"An error occurred: {e}")
         return None
     
-upload_audio_file("https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/test/upload", "output.wav")
-
+if __name__ == "__main__":
+    upload_audio_file(API_GATEWAY_URL, FILE_PATH)
