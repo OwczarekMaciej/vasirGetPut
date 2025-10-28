@@ -8,7 +8,6 @@ import time
 import os
 
 class VasirApp:
-    # --- PALETA KOLORÓW ---
     MAIN_BG = "#1E1E1E"          # Bardzo ciemne tło
     PRIMARY_COLOR = "#007BFF"    # Akcent / Kolor domyślny
     SUCCESS_COLOR = "#28A745"    # Start / Nagrywanie
@@ -20,20 +19,17 @@ class VasirApp:
         self.setup_window()
         self.initialize_variables()
 
-        # Używamy większego, bardziej centralnego Frame
         frame = tk.Frame(root, bg=self.MAIN_BG)
         frame.pack(expand=True, fill='both', padx=50, pady=50)
 
-        # Używamy siatki dla lepszej kontroli nad układem
-        frame.grid_columnconfigure(0, weight=1) # Ustawienie kolumny na rozszerzalną
+        frame.grid_columnconfigure(0, weight=1)
 
         self.setup_toggle_button(frame)
         self.setup_labels(frame)
 
     def setup_window(self):
         self.root.title("VASIR Voice Assistant")
-        # Zmieniamy rozmiar na bardziej kompaktowy, ale nadal czytelny
-        self.root.geometry("500x300")
+        self.root.geometry("600x400")
         self.root.config(bg=self.MAIN_BG)
     
     def initialize_variables(self):
@@ -49,39 +45,32 @@ class VasirApp:
         # Nowy, czysty wygląd przycisku
         self.toggle_button = tk.Button(frame, text="Start Recording", command=self.toggle_recording,
                                        font=("Segoe UI", 18, "bold"), 
-                                       bg=self.SUCCESS_COLOR, fg="black", # Używamy koloru sukcesu jako startowego
+                                       bg=self.SUCCESS_COLOR, fg="black",
                                        width=18, height=2, relief="flat", bd=0, 
-                                       activebackground=self.SUCCESS_COLOR) # Utrzymanie koloru przy kliknięciu
+                                       activebackground=self.SUCCESS_COLOR)
         
         self.configure_button(self.toggle_button, self.SUCCESS_COLOR)
-        self.toggle_button.grid(row=0, column=0, pady=(0, 20), sticky="n") # Wyśrodkowanie na górze
+        self.toggle_button.grid(row=0, column=0, pady=(0, 20), sticky="n")
 
     def configure_button(self, button, highlight_color):
-        # Usunięto bindy na highlight, używamy czystego wyglądu flat, 
-        # opcjonalnie można dodać hover np. ze zmianą koloru na jaśniejszy odcień
         pass 
 
     def setup_labels(self, frame):
-        # Nagłówek dla lepszego kontekstu (nowy element)
         self.title_label = tk.Label(frame, text="VASIR - Voice Assistant",
                                     font=("Segoe UI", 20, "bold"), 
                                     bg=self.MAIN_BG, fg=self.TEXT_COLOR)
         self.title_label.grid(row=0, column=0, pady=(20, 10), sticky="n")
 
-        # Przemieszczamy przycisk na dół nagłówka
         self.toggle_button.grid(row=1, column=0, pady=(20, 20), sticky="n")
 
-        # Etykieta statusu jest teraz większa i bardziej widoczna
         self.status_label = tk.Label(frame, text="Press Start to activate voice command", 
                                      font=("Segoe UI", 14), bg=self.MAIN_BG, fg=self.TEXT_COLOR)
         self.status_label.grid(row=2, column=0, pady=5)
 
-        # Etykieta ładowania jest pod etykietą statusu
         self.loading_label = tk.Label(frame, text="", font=("Segoe UI", 12), 
                                       bg=self.MAIN_BG, fg=self.TEXT_COLOR)
         self.loading_label.grid(row=3, column=0, pady=5)
 
-    # --- Metody obsługujące logikę pozostają bez zmian, modyfikujemy tylko UI ---
 
     def toggle_recording(self):
         if not self.is_recording:
@@ -109,7 +98,6 @@ class VasirApp:
         threading.Thread(target=self.upload_and_get_response).start()
 
     def update_ui_start_recording(self):
-        # Nowy, wyraźny kolor "Stop"
         self.toggle_button.config(text="Stop Recording", bg=self.ERROR_COLOR)
         self.status_label.config(text="🔴 Recording... Say your command", fg=self.ERROR_COLOR)
 
@@ -148,7 +136,7 @@ class VasirApp:
             time.sleep(1)
 
     def play_audio(self, filename):
-        os.system(f"afplay {filename}") # Zakładając macOS/Linux dla afplay
+        os.system(f"afplay {filename}")
         self.status_label.config(text="Playback complete. Ready.", fg=self.TEXT_COLOR)
 
     def start_loading_animation(self):
@@ -160,12 +148,10 @@ class VasirApp:
     def stop_loading_animation(self):
         self.loading_animation_active = False
         if self.loading_thread and self.loading_thread.is_alive():
-            # Czekamy na zakończenie wątku animacji
             self.loading_thread.join() 
         self.loading_label.config(text="")
 
     def animate_loading(self):
-        # Bardziej subtelna animacja kropkami
         loading_text = "..."
         while self.loading_animation_active:
             for i in range(4):
@@ -175,8 +161,6 @@ class VasirApp:
                 self.loading_label.config(text=f"Processing{dots}")
                 time.sleep(0.3)
             
-            # Wprowadzono konieczność sprawdzania flagi, aby wątek szybko się zakończył
-            # po wywołaniu stop_loading_animation
             if not self.loading_animation_active:
                 break
 
