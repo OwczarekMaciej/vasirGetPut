@@ -9,3 +9,14 @@ putEvent.py
 output.wav
 __pycache__
 response_audio.mp3
+__pycache__/getAudio.cpython-311.pyc
+__pycache__/putAudio.cpython-311.pyc
+/__pycache__
+*.spec
+*.toc
+*.pkg
+*.zip
+*.icns
+/build
+/dist
+/__pycache__
