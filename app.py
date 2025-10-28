@@ -42,7 +42,6 @@ class VasirApp:
         self.api_url_download = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/test/"
 
     def setup_toggle_button(self, frame):
-        # Nowy, czysty wygląd przycisku
         self.toggle_button = tk.Button(frame, text="Start Recording", command=self.toggle_recording,
                                        font=("Segoe UI", 18, "bold"), 
                                        bg=self.SUCCESS_COLOR, fg="black",
