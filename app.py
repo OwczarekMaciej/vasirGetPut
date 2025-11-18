@@ -1,317 +1,272 @@
-# vasir_app.py
-
-import tkinter as tk
-import threading
 import time
+import threading
 import os
+
+import flet as ft
 
 import recordAudio
 import putAudio
 import getAudio
 
 
-class VasirApp:
-    MAIN_BG = "#1E1E1E"          # tło
-    PRIMARY_COLOR = "#007BFF"    # akcent
-    SUCCESS_COLOR = "#28A745"    # start / OK
-    ERROR_COLOR = "#DC3545"      # błąd / stop
-    TEXT_COLOR = "#FFFFFF"       # biały tekst
-
-    def __init__(self, root):
-        self.root = root
-        self.setup_window()
-        self.initialize_variables()
-
-        frame = tk.Frame(root, bg=self.MAIN_BG)
-        frame.pack(expand=True, fill="both", padx=50, pady=50)
-
-        frame.grid_columnconfigure(0, weight=1)
-
-        self.setup_toggle_button(frame)
-        self.setup_labels(frame)
-        self.setup_voice_controls(frame)   # suwaki/checkbox dla voice_settings
-
-    def setup_window(self):
-        self.root.title("VASIR Voice Assistant")
-        self.root.geometry("700x600")
-        self.root.config(bg=self.MAIN_BG)
-
-    def initialize_variables(self):
-        self.stop_event = threading.Event()
-        self.recording_thread = None
-        self.loading_thread = None
-        self.is_recording = False
-        self.filename = "output.wav"
-        self.api_url_upload = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/test/upload"
-        self.api_url_download = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/test/"
-
-        self.stability_var = tk.DoubleVar(value=50.0)
-        self.similarity_var = tk.DoubleVar(value=80.0)
-        self.style_var = tk.DoubleVar(value=0.0)
-        self.speaker_boost_var = tk.BooleanVar(value=True)
-
-        self.loading_animation_active = False
-
-    def setup_toggle_button(self, frame):
-        self.toggle_button = tk.Button(
-            frame,
-            text="Start Recording",
-            command=self.toggle_recording,
-            font=("Segoe UI", 18, "bold"),
-            bg=self.SUCCESS_COLOR,
-            fg="black",
-            width=18,
-            height=2,
-            relief="flat",
-            bd=0,
-            activebackground=self.SUCCESS_COLOR,
-        )
-
-        self.configure_button(self.toggle_button, self.SUCCESS_COLOR)
-        self.toggle_button.grid(row=1, column=0, pady=(20, 20), sticky="n")
-
-    def configure_button(self, button, highlight_color):
-        pass
-
-    def setup_labels(self, frame):
-        self.title_label = tk.Label(
-            frame,
-            text="VASIR - Voice Assistant",
-            font=("Segoe UI", 20, "bold"),
-            bg=self.MAIN_BG,
-            fg=self.TEXT_COLOR,
-        )
-        self.title_label.grid(row=0, column=0, pady=(20, 10), sticky="n")
-
-        self.status_label = tk.Label(
-            frame,
-            text="Press Start to activate voice command",
-            font=("Segoe UI", 14),
-            bg=self.MAIN_BG,
-            fg=self.TEXT_COLOR,
-        )
-        self.status_label.grid(row=2, column=0, pady=5)
-
-        self.loading_label = tk.Label(
-            frame,
-            text="",
-            font=("Segoe UI", 12),
-            bg=self.MAIN_BG,
-            fg=self.TEXT_COLOR,
-        )
-        self.loading_label.grid(row=3, column=0, pady=5)
-
-    def setup_voice_controls(self, frame):
-        # Stability
-        stability_label = tk.Label(
-            frame,
-            text="Stability",
-            bg=self.MAIN_BG,
-            fg=self.TEXT_COLOR,
-            font=("Segoe UI", 10),
-        )
-        stability_label.grid(row=4, column=0, pady=(10, 0), sticky="w")
-
-        stability_scale = tk.Scale(
-            frame,
-            from_=0,
-            to=100,
-            orient="horizontal",
-            variable=self.stability_var,
-            bg=self.MAIN_BG,
-            fg=self.TEXT_COLOR,
-            troughcolor=self.PRIMARY_COLOR,
-            highlightthickness=0,
-        )
-        stability_scale.grid(row=5, column=0, sticky="ew")
-
-        # Similarity boost
-        similarity_label = tk.Label(
-            frame,
-            text="Similarity boost",
-            bg=self.MAIN_BG,
-            fg=self.TEXT_COLOR,
-            font=("Segoe UI", 10),
-        )
-        similarity_label.grid(row=6, column=0, pady=(10, 0), sticky="w")
-
-        similarity_scale = tk.Scale(
-            frame,
-            from_=0,
-            to=100,
-            orient="horizontal",
-            variable=self.similarity_var,
-            bg=self.MAIN_BG,
-            fg=self.TEXT_COLOR,
-            troughcolor=self.PRIMARY_COLOR,
-            highlightthickness=0,
-        )
-        similarity_scale.grid(row=7, column=0, sticky="ew")
-
-        # Style
-        style_label = tk.Label(
-            frame,
-            text="Style",
-            bg=self.MAIN_BG,
-            fg=self.TEXT_COLOR,
-            font=("Segoe UI", 10),
-        )
-        style_label.grid(row=8, column=0, pady=(10, 0), sticky="w")
-
-        style_scale = tk.Scale(
-            frame,
-            from_=0,
-            to=100,
-            orient="horizontal",
-            variable=self.style_var,
-            bg=self.MAIN_BG,
-            fg=self.TEXT_COLOR,
-            troughcolor=self.PRIMARY_COLOR,
-            highlightthickness=0,
-        )
-        style_scale.grid(row=9, column=0, sticky="ew")
-
-        # Speaker boost
-        speaker_boost_check = tk.Checkbutton(
-            frame,
-            text="Use speaker boost",
-            variable=self.speaker_boost_var,
-            bg=self.MAIN_BG,
-            fg=self.TEXT_COLOR,
-            selectcolor=self.MAIN_BG,
-            activebackground=self.MAIN_BG,
-        )
-        speaker_boost_check.grid(row=10, column=0, pady=(10, 0), sticky="w")
+API_URL_UPLOAD = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/test/upload"
+API_URL_DOWNLOAD = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/test/"
+LOCAL_RECORDING_FILENAME = "output.wav"
+RESPONSE_AUDIO_FILENAME = "response_audio.mp3"
 
 
-    def toggle_recording(self):
-        if not self.is_recording:
-            self.start_recording()
-        else:
-            self.stop_recording()
+def main(page: ft.Page):
+    page.title = "VASIR Voice Assistant"
+    page.theme_mode = ft.ThemeMode.DARK
+    page.bgcolor = "#121212"
 
-    def start_recording(self):
-        self.stop_event.clear()
-        self.is_recording = True
-        self.update_ui_start_recording()
+    is_recording = False
+    record_thread = None
 
-        self.recording_thread = threading.Thread(target=self.record_audio)
-        self.recording_thread.start()
+    status_text = ft.Text(
+        "Press Start to activate voice command",
+        size=16,
+    )
+    loading_text = ft.Text(
+        "",
+        size=14,
+        color="#888888",
+    )
 
-    def stop_recording(self):
-        self.stop_event.set()
-        if self.recording_thread:
-            self.recording_thread.join()
+    # --- labelki aktualnych wartości ---
+    stability_value_text = ft.Text("0.50")
+    similarity_value_text = ft.Text("0.80")
+    style_value_text = ft.Text("0.00")
 
-        self.is_recording = False
-        self.status_label.config(text="Uploading audio...", fg=self.PRIMARY_COLOR)
-        self.toggle_button.config(text="Start Recording", bg=self.SUCCESS_COLOR)
+    # --- slidery ---
+    stability_slider = ft.Slider(
+        min=0,
+        max=100,
+        value=50,
+        divisions=20,
+        active_color="blue",
+        on_change=lambda e: _update_slider_value(
+            e, stability_value_text
+        ),
+    )
+    similarity_slider = ft.Slider(
+        min=0,
+        max=100,
+        value=80,
+        divisions=20,
+        active_color="blue",
+        on_change=lambda e: _update_slider_value(
+            e, similarity_value_text
+        ),
+    )
+    style_slider = ft.Slider(
+        min=0,
+        max=100,
+        value=0,
+        divisions=20,
+        active_color="blue",
+        on_change=lambda e: _update_slider_value(
+            e, style_value_text
+        ),
+    )
+    speaker_boost_checkbox = ft.Checkbox(
+        label="Use speaker boost",
+        value=True,
+    )
 
-        threading.Thread(target=self.upload_and_get_response).start()
+    record_button = ft.ElevatedButton(
+        "Start Recording",
+        icon="🎙️",
+        bgcolor="green",
+        color="black",
+    )
 
-    def update_ui_start_recording(self):
-        self.toggle_button.config(text="Stop Recording", bg=self.ERROR_COLOR)
-        self.status_label.config(
-            text="🔴 Recording... Say your command", fg=self.ERROR_COLOR
-        )
+    stop_event = threading.Event()
+    loading_flag = threading.Event()
 
-    def record_audio(self):
-        recordAudio.record_audio(self.stop_event)
-
-    def get_voice_settings(self):
-        stability = self.stability_var.get() / 100.0
-        similarity = self.similarity_var.get() / 100.0
-        style = self.style_var.get() / 100.0
-        use_speaker_boost = self.speaker_boost_var.get()
-
+    def get_voice_settings():
         return {
-            "stability": stability,
-            "similarity_boost": similarity,
-            "style": style,
-            "use_speaker_boost": use_speaker_boost,
+            "stability": stability_slider.value / 100.0,
+            "similarity_boost": similarity_slider.value / 100.0,
+            "style": style_slider.value / 100.0,
+            "use_speaker_boost": speaker_boost_checkbox.value,
         }
 
-    def upload_and_get_response(self):
-        try:
-            voice_settings = self.get_voice_settings()
+    # --- funkcja pomocnicza do aktualizacji wartości slidera ---
+    def _update_slider_value(e: ft.ControlEvent, label: ft.Text):
+        # slider ma zakres 0–100, konwertujemy na 0.00–1.00
+        scaled = float(e.control.value) / 100.0
+        label.value = f"{scaled:.2f}"
+        page.update()
 
-            response_filename = putAudio.upload_audio_file(
-                self.api_url_upload,
-                self.filename,
-                voice_settings=voice_settings,
-            )
-            if response_filename:
-                self.status_label.config(
-                    text="Uploaded. Waiting for response...", fg=self.PRIMARY_COLOR
-                )
-                self.start_loading_animation()
-                self.poll_for_response_audio(response_filename)
-            else:
-                self.status_label.config(
-                    text="Upload failed. Check connection.", fg=self.ERROR_COLOR
-                )
-        except Exception as e:
-            self.status_label.config(text=f"Error: {e}", fg=self.ERROR_COLOR)
+    # ustaw wartości początkowe (bo on_change jeszcze nie wywołany)
+    stability_value_text.value = f"{stability_slider.value / 100.0:.2f}"
+    similarity_value_text.value = f"{similarity_slider.value / 100.0:.2f}"
+    style_value_text.value = f"{style_slider.value / 100.0:.2f}"
 
-    def poll_for_response_audio(self, response_filename):
+    # --- audio workflow ---
+
+    def record_audio_thread():
+        recordAudio.record_audio(stop_event)
+
+    def loading_animation():
+        dots_cycle = ["", ".", "..", "..."]
+        i = 0
+        while loading_flag.is_set():
+            loading_text.value = f"Processing{dots_cycle[i % len(dots_cycle)]}"
+            i += 1
+            page.update()
+            time.sleep(0.3)
+        loading_text.value = ""
+        page.update()
+
+    def poll_for_response_audio(response_filename: str):
         while True:
             try:
-                audio_data = getAudio.get_audio_file(
-                    self.api_url_download, response_filename
-                )
+                audio_data = getAudio.get_audio_file(API_URL_DOWNLOAD, response_filename)
                 if audio_data:
-                    with open("response_audio.mp3", "wb") as f:
+                    with open(RESPONSE_AUDIO_FILENAME, "wb") as f:
                         f.write(audio_data)
 
-                    self.status_label.config(
-                        text="✅ Response received. Playing audio...",
-                        fg=self.SUCCESS_COLOR,
-                    )
-                    self.stop_loading_animation()
-                    self.play_audio("response_audio.mp3")
+                    status_text.value = "✅ Response received. Playing audio..."
+                    loading_flag.clear()
+                    page.update()
+
+                    os.system(f"afplay {RESPONSE_AUDIO_FILENAME}")
+                    status_text.value = "Playback complete. Ready."
+                    page.update()
                     break
                 else:
-                    self.status_label.config(
-                        text="⏳ Waiting for response...", fg=self.PRIMARY_COLOR
-                    )
+                    status_text.value = "⏳ Waiting for response..."
+                    page.update()
             except Exception as e:
-                self.status_label.config(
-                    text=f"Error during retrieval: {e}", fg=self.ERROR_COLOR
-                )
+                status_text.value = f"Error during retrieval: {e}"
+                loading_flag.clear()
+                page.update()
+                break
 
             time.sleep(1)
 
-    def play_audio(self, filename):
-        os.system(f"afplay {filename}")
-        self.status_label.config(text="Playback complete. Ready.", fg=self.TEXT_COLOR)
+    def upload_and_get_response():
+        try:
+            voice_settings = get_voice_settings()
+            response_filename = putAudio.upload_audio_file(
+                API_URL_UPLOAD,
+                LOCAL_RECORDING_FILENAME,
+                voice_settings=voice_settings,
+            )
+            if response_filename:
+                status_text.value = "Uploaded. Waiting for response..."
+                loading_flag.set()
+                page.update()
 
+                threading.Thread(target=loading_animation, daemon=True).start()
+                threading.Thread(
+                    target=poll_for_response_audio,
+                    args=(response_filename,),
+                    daemon=True,
+                ).start()
+            else:
+                status_text.value = "Upload failed. Check connection."
+                page.update()
+        except Exception as e:
+            status_text.value = f"Error: {e}"
+            page.update()
 
-    def start_loading_animation(self):
-        self.loading_label.config(text="Waiting...")
-        self.loading_animation_active = True
-        self.loading_thread = threading.Thread(target=self.animate_loading)
-        self.loading_thread.start()
+    # --- handler przycisku ---
 
-    def stop_loading_animation(self):
-        self.loading_animation_active = False
-        if self.loading_thread and self.loading_thread.is_alive():
-            self.loading_thread.join()
-        self.loading_label.config(text="")
+    def on_record_click(e):
+        nonlocal is_recording, record_thread
+        if not is_recording:
+            stop_event.clear()
+            is_recording = True
+            status_text.value = "🔴 Recording... Say your command"
+            record_button.text = "Stop Recording"
+            record_button.bgcolor = "red"
+            record_button.icon = "⏹️"
+            page.update()
 
-    def animate_loading(self):
-        loading_text = "..."
-        while self.loading_animation_active:
-            for i in range(4):
-                if not self.loading_animation_active:
-                    break
-                dots = loading_text[:i]
-                self.loading_label.config(text=f"Processing{dots}")
-                time.sleep(0.3)
-            if not self.loading_animation_active:
-                break
+            record_thread = threading.Thread(
+                target=record_audio_thread,
+                daemon=True,
+            )
+            record_thread.start()
+        else:
+            stop_event.set()
+            is_recording = False
+            status_text.value = "Stopping recording..."
+            page.update()
+
+            if record_thread and record_thread.is_alive():
+                record_thread.join()
+
+            status_text.value = "Uploading audio..."
+            record_button.text = "Start Recording"
+            record_button.bgcolor = "green"
+            record_button.icon = "🎙️"
+            page.update()
+
+            threading.Thread(
+                target=upload_and_get_response,
+                daemon=True,
+            ).start()
+
+    record_button.on_click = on_record_click
+
+    # --- layout ---
+
+    page.add(
+        ft.Column(
+            controls=[
+                ft.Text("VASIR - Voice Assistant", size=26, weight=ft.FontWeight.BOLD),
+                ft.Container(
+                    content=record_button,
+                    alignment=ft.alignment.center,
+                    padding=10,
+                ),
+                status_text,
+                loading_text,
+                ft.Divider(),
+                ft.Text("Voice settings", size=18, weight=ft.FontWeight.BOLD),
+
+                # Stability z wartością
+                ft.Row(
+                    controls=[
+                        ft.Text("Stability"),
+                        stability_value_text,
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+                stability_slider,
+
+                # Similarity z wartością
+                ft.Row(
+                    controls=[
+                        ft.Text("Similarity boost"),
+                        similarity_value_text,
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+                similarity_slider,
+
+                # Style z wartością
+                ft.Row(
+                    controls=[
+                        ft.Text("Style"),
+                        style_value_text,
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+                style_slider,
+
+                speaker_boost_checkbox,
+            ],
+            expand=True,
+            horizontal_alignment=ft.CrossAxisAlignment.START,
+            spacing=10,
+        )
+    )
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = VasirApp(root)
-    root.mainloop()
+    ft.app(target=main)
