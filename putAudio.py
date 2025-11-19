@@ -8,7 +8,7 @@ API_GATEWAY_URL = "https://apzna1a8ci.execute-api.eu-north-1.amazonaws.com/test/
 FILE_PATH = "output.wav"
 
 
-def upload_audio_file(api_url, file_path, voice_settings=None):
+def upload_audio_file(api_url, file_path, voice_settings=None, voice_id=None):
     try:
         with open(file_path, "rb") as audio_file:
             encoded_audio = base64.b64encode(audio_file.read()).decode("utf-8")
@@ -24,6 +24,8 @@ def upload_audio_file(api_url, file_path, voice_settings=None):
 
         if voice_settings is not None:
             payload["voice_settings"] = voice_settings
+        if voice_id is not None:
+            payload["voice_id"] = voice_id
 
         print(f"Wysyłanie pliku {os.path.basename(file_path)} do {api_url}...")
         response = requests.post(api_url, json=payload)

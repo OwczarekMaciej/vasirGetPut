@@ -19,7 +19,7 @@ def main(page: ft.Page):
     page.title = "VASIR Voice Assistant"
     page.theme_mode = ft.ThemeMode.DARK
     page.bgcolor = "#121212"
-
+    
     is_recording = False
     record_thread = None
 
@@ -33,12 +33,24 @@ def main(page: ft.Page):
         color="#888888",
     )
 
+    # --- voice_id z UI ---
+    voice_id_field = ft.TextField(
+        label="ElevenLabs voice_id",
+        value="Xb7hH8MSUJpSbSDYk0k2",  # domyślny / ulubiony głos
+        width=400,
+    )
+
     # --- labelki aktualnych wartości ---
     stability_value_text = ft.Text("0.50")
     similarity_value_text = ft.Text("0.80")
     style_value_text = ft.Text("0.00")
 
     # --- slidery ---
+    def _update_slider_value(e: ft.ControlEvent, label: ft.Text):
+        scaled = float(e.control.value) / 100.0
+        label.value = f"{scaled:.2f}"
+        page.update()
+
     stability_slider = ft.Slider(
         min=0,
         max=100,
@@ -74,6 +86,11 @@ def main(page: ft.Page):
         value=True,
     )
 
+    # ustaw wartości początkowe labeli
+    stability_value_text.value = f"{stability_slider.value / 100.0:.2f}"
+    similarity_value_text.value = f"{similarity_slider.value / 100.0:.2f}"
+    style_value_text.value = f"{style_slider.value / 100.0:.2f}"
+
     record_button = ft.ElevatedButton(
         "Start Recording",
         icon="🎙️",
@@ -84,6 +101,8 @@ def main(page: ft.Page):
     stop_event = threading.Event()
     loading_flag = threading.Event()
 
+    # --- zbieranie ustawień dla API ---
+
     def get_voice_settings():
         return {
             "stability": stability_slider.value / 100.0,
@@ -92,17 +111,8 @@ def main(page: ft.Page):
             "use_speaker_boost": speaker_boost_checkbox.value,
         }
 
-    # --- funkcja pomocnicza do aktualizacji wartości slidera ---
-    def _update_slider_value(e: ft.ControlEvent, label: ft.Text):
-        # slider ma zakres 0–100, konwertujemy na 0.00–1.00
-        scaled = float(e.control.value) / 100.0
-        label.value = f"{scaled:.2f}"
-        page.update()
-
-    # ustaw wartości początkowe (bo on_change jeszcze nie wywołany)
-    stability_value_text.value = f"{stability_slider.value / 100.0:.2f}"
-    similarity_value_text.value = f"{similarity_slider.value / 100.0:.2f}"
-    style_value_text.value = f"{style_slider.value / 100.0:.2f}"
+    def get_voice_id():
+        return voice_id_field.value.strip()
 
     # --- audio workflow ---
 
@@ -150,10 +160,13 @@ def main(page: ft.Page):
     def upload_and_get_response():
         try:
             voice_settings = get_voice_settings()
+            voice_id = get_voice_id()
+
             response_filename = putAudio.upload_audio_file(
                 API_URL_UPLOAD,
                 LOCAL_RECORDING_FILENAME,
                 voice_settings=voice_settings,
+                voice_id=voice_id,
             )
             if response_filename:
                 status_text.value = "Uploaded. Waiting for response..."
@@ -227,9 +240,11 @@ def main(page: ft.Page):
                 status_text,
                 loading_text,
                 ft.Divider(),
+                ft.Text("ElevenLabs", size=18, weight=ft.FontWeight.BOLD),
+                voice_id_field,
+                ft.Divider(),
                 ft.Text("Voice settings", size=18, weight=ft.FontWeight.BOLD),
 
-                # Stability z wartością
                 ft.Row(
                     controls=[
                         ft.Text("Stability"),
@@ -239,7 +254,6 @@ def main(page: ft.Page):
                 ),
                 stability_slider,
 
-                # Similarity z wartością
                 ft.Row(
                     controls=[
                         ft.Text("Similarity boost"),
@@ -249,7 +263,6 @@ def main(page: ft.Page):
                 ),
                 similarity_slider,
 
-                # Style z wartością
                 ft.Row(
                     controls=[
                         ft.Text("Style"),
